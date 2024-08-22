@@ -37,8 +37,7 @@ app.use('/api/v1/app/auth', authRouter);
 app.use('/api/v1/app/users', isAuthenticated, usersRouter);
 app.use('/api/v1/admin', isAdmin, adminRouter);
 app.use('/', indexRouter);
-app.use('/api/v1/trucks', truckRoutes);
-app.use('/api/v1/fuel', truckRoutes);
+app.use('/api/v1/app/truck', truckRoutes);
 
 // error handler
 app.use(error)
