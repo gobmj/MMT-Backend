@@ -1,4 +1,4 @@
-const { default: mongoose } = require('mongoose');
+const { default: mongoose, get } = require('mongoose');
 const Truck = require('../models/truck-model'); // Adjust the path as needed
 
 const addTruck = async (req, res) => {
@@ -48,6 +48,51 @@ const getTruckById = async (req, res) => {
     }
 };
 
+const getTruckByUser = async (req, res) => {    
+    try {
+        const { userId } = req.params;
+
+        const trucks = await Truck.find({ userId });
+
+        if (trucks.length === 0) {
+            return res.status(404).json({ message: 'No trucks found for this user' });
+        }
+
+        res.status(200).json(trucks);
+    } catch (error) {
+        console.error('Error fetching trucks by user:', error);
+        res.status(500).json({ message: 'Failed to fetch trucks', error: error.message });
+    }
+};
+
+const updateTruckById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body;
+
+        // Validate the ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid truck ID' });
+        }
+
+        // Update the truck with the provided fields
+        const updatedTruck = await Truck.findByIdAndUpdate(
+            id,
+            { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc },
+            { new: true }
+        );
+
+        if (!updatedTruck) {
+            return res.status(404).json({ message: 'Truck not found' });
+        }
+
+        res.status(200).json(updatedTruck);
+    } catch (error) {
+        console.error('Error updating truck:', error);
+        res.status(500).json({ message: 'Failed to update truck', error: error.message });
+    }
+}
+
 const getAllTrucks = async (req, res) => {
     try {
         const trucks = await Truck.find();
@@ -94,9 +139,13 @@ const deleteTruckById = async (req, res) => {
             return res.status(400).json({ message: 'Invalid truck ID' });
         }
 
-        await Truck.findByIdAndDelete(id);
+        const deletedTruck = await Truck.findByIdAndDelete(id);
 
-        res.status(204).end();
+        if (!deletedTruck) {
+            return res.status(404).json({ message: 'Truck not found' });
+        }
+
+        res.status(200).json({ message: 'Truck deleted' });
     } catch (error) {
         console.error('Error deleting truck:', error);
         res.status(500).json({ message: 'Failed to delete truck', error: error.message });
@@ -109,4 +158,6 @@ module.exports = {
     getAllTrucks,
     updateTruck,
     deleteTruckById,
+    getTruckByUser,
+    updateTruckById,
 };
