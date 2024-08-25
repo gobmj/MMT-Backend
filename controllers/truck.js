@@ -21,7 +21,7 @@ const addTruck = async (req, res) => {
         res.status(201).json(savedTruck);
     } catch (error) {
         console.error('Error adding truck:', error); // Log the full error
-        res.status(500).json({ message: 'Failed to add truck', error: error.message });
+        res.status(500).json({ message:'Failed to add truck', error: error.message });
     }
 };
 
@@ -68,7 +68,7 @@ const getTruckByUser = async (req, res) => {
 const updateTruckById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body;
+        const { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body.values;
 
         // Validate the ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -77,7 +77,7 @@ const updateTruckById = async (req, res) => {
 
         // Update the truck with the provided fields
         const updatedTruck = await Truck.findByIdAndUpdate(
-            id,
+            {_id:id},
             { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc },
             { new: true }
         );
