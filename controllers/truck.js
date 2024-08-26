@@ -48,7 +48,7 @@ const getTruckById = async (req, res) => {
     }
 };
 
-const getTruckByUser = async (req, res) => {    
+const getAllTruckByUser = async (req, res) => {    
     try {
         const { userId } = req.params;
 
@@ -158,6 +158,6 @@ module.exports = {
     getAllTrucks,
     updateTruck,
     deleteTruckById,
-    getTruckByUser,
+    getAllTruckByUser,
     updateTruckById,
 };

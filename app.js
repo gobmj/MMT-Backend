@@ -15,7 +15,7 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
 const adminRouter = require('./routes/admin');
-const truckRoutes = require('./routes/truckfuel');
+const truckRoutes = require('./routes/truck');
 
 // express app
 const app = express();
