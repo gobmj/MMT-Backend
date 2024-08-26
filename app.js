@@ -15,7 +15,10 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const authRouter = require('./routes/auth');
 const adminRouter = require('./routes/admin');
-const truckRoutes = require('./routes/truck');
+const trucksRoutes = require('./routes/trucks');
+const fuelExpensesRoutes = require('./routes/fuelExpenses');
+const defExpensesRoutes = require('./routes/defExpenses');
+const otherExpensesRoutes = require('./routes/otherExpenses');
 
 // express app
 const app = express();
@@ -37,7 +40,10 @@ app.use('/api/v1/app/auth', authRouter);
 app.use('/api/v1/app/users', isAuthenticated, usersRouter);
 app.use('/api/v1/admin', isAdmin, adminRouter);
 app.use('/', indexRouter);
-app.use('/api/v1/app/truck', truckRoutes);
+app.use('/api/v1/app/truck', trucksRoutes);
+app.use('/api/v1/app/fuelExpenses', fuelExpensesRoutes);
+app.use('/api/v1/app/defExpenses', defExpensesRoutes);
+app.use('/api/v1/app/otherExpenses', otherExpensesRoutes);
 
 // error handler
 app.use(error)

@@ -1,11 +1,11 @@
-const FuelFilling = require('../models/fuel-filling-model'); // Adjust the path as needed
+const FuelExpense = require('../models/fuelExpenses-model'); // Adjust the path as needed
 
 // Controller to add a new fuel filling record
-const addFuelFilling = async (req, res) => {
+const addFuelExpense = async (req, res) => {
     try {
         const { truckId, date, currentKM, litres, cost, note } = req.body;
 
-        const newFuelFilling = new FuelFilling({
+        const newFuelExpense = new FuelExpense({
             truckId,
             date,
             currentKM,
@@ -14,8 +14,8 @@ const addFuelFilling = async (req, res) => {
             note,
         });
 
-        const savedFuelFilling = await newFuelFilling.save();
-        res.status(201).json(savedFuelFilling);
+        const savedFuelExpense = await newFuelExpense.save();
+        res.status(201).json(savedFuelExpense);
     } catch (error) {
         console.error('Error adding fuel filling:', error);
         res.status(500).json({ message: 'Failed to add fuel filling' });
@@ -23,5 +23,5 @@ const addFuelFilling = async (req, res) => {
 };
 
 module.exports = {
-    addFuelFilling,
+    addFuelExpense,
 };
