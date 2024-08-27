@@ -2,7 +2,7 @@ const { catchAsyncError } = require('../middleware/catchAsyncError');
 const ErrorHandler = require('../middleware/errorHandlers');
 const userModel = require('../models/user-model');
 const truckModel = require('../models/truck-model');
-const fuelFillingModel = require('../models/fuelExpenses-model');
+const fuelFillingModel = require('../models/fuelExpense-model');
 
 module.exports.getAlluser = catchAsyncError(async (req, res, next) => {
     const users = await userModel.find({})

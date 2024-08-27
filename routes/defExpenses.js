@@ -1,8 +1,9 @@
 const express = require('express');
+const { addDefExpense } = require('../controllers/defExpenses');
 
 const router = express.Router();
 
-// router.post('/addTruck', addTruck);
+router.post('/addDefExpense', addDefExpense);
 // router.get('/getAllTrucks', getAllTrucks);
 // router.get('/getTruckById/:id', getTruckById); 
 // router.get('/getAllTrucksByUser/:userId', getAllTruckByUser);

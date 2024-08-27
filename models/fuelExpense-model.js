@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const FuelFillingSchema = new mongoose.Schema({
     truckId: {
-        type: mongoose.Schema.Types.ObjectId,
+        // type: mongoose.Schema.Types.ObjectId,
+        type: String,
         ref: 'Truck',
         required: [true, "Truck ID is required"],
     },
