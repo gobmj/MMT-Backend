@@ -6,8 +6,6 @@ const addOtherExpense = async (req, res) => {
   try {
     const { truckId, addedBy, date, category, cost, note } = req.body;
 
-    console.log(req.body);
-
     const newOtherExpense = new OtherExpense({
       truckId,
       addedBy,
@@ -36,8 +34,6 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
     const endDate = selectedDates
       ? moment(selectedDates[1]).endOf("day").toDate()
       : null;
-
-    console.log(startDate, endDate);
 
     if (!truckId) {
       return res.status(400).json({ message: "Truck ID is required" });

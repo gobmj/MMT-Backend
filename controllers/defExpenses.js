@@ -6,8 +6,6 @@ const addDefExpense = async (req, res) => {
   try {
     const { truckId, addedBy, date, currentKM, litres, cost, note } = req.body;
 
-    console.log(req.body);
-
     const newDefExpense = new DefExpense({
       truckId,
       addedBy,
