@@ -33,7 +33,7 @@ const FuelExpenseSchema = new mongoose.Schema({
     },
     note: {
         type: String,
-        required: [true, "Note is required"],
+        trim: true
     }
 });
 
