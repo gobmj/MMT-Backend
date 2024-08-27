@@ -5,8 +5,8 @@ const app = require('../app');
 const debug = require('debug')('nalaso-express:server');
 const http = require('http');
 const { connectDB } = require('../database/connection');
-const dotenv = require("dotenv")
-dotenv.config()
+const dotenv = require("dotenv");
+dotenv.config();
 
 // Normalize a port into a number, string, or false.
 const normalizePort = (val) => {
@@ -19,7 +19,7 @@ const normalizePort = (val) => {
 	if (port >= 0) return port;
 
 	return false;
-}
+};
 
 // Event listener for HTTP server "error" event.
 const onError = (error) => {
@@ -31,7 +31,7 @@ const onError = (error) => {
 		'Pipe ' + port
 	) : (
 		'Port ' + port
-	)
+	);
 
 	// handle specific listen errors with friendly messages
 	switch (error.code) {
@@ -46,7 +46,7 @@ const onError = (error) => {
 		default:
 			throw error;
 	}
-}
+};
 
 // Event listener for HTTP server "listening" event.
 const onListening = () => {
@@ -55,9 +55,9 @@ const onListening = () => {
 		'pipe ' + addr
 	) : (
 		'port ' + addr.port
-	)
+	);
 	debug('Listening on ' + bind);
-}
+};
 
 // Get port from environment and store in Express.
 const port = normalizePort(process.env.PORT || '8000');
@@ -69,15 +69,16 @@ const server = http.createServer(app);
 // Connect to database
 connectDB().then(() => {
 	try {
-		// Listen on provided port, on all network interfaces.
-		server.listen(port, () => {
-			console.log(`Server connected to http://localhost:${port}`);
-		})
+		// Listen on provided IP and port, on all network interfaces.
+		server.listen(port, '16.170.162.234', () => {
+			console.log(`Server connected to http://16.170.162.234:${port}`);
+		});
 	} catch (error) {
-		console.log('Cannot connect to the server')
+		console.log('Cannot connect to the server');
 	}
 }).catch(error => {
 	console.log("Invalid database connection...!");
-})
+});
+
 server.on('error', onError);
 server.on('listening', onListening);
