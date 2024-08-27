@@ -1,4 +1,5 @@
-const FuelExpense = require("../models/fuelExpense-model"); // Adjust the path as needed
+const FuelExpense = require("../models/fuelExpense-model");
+const moment = require("moment");
 
 // Controller to add a new fuel filling record
 const addFuelExpense = async (req, res) => {
@@ -27,19 +28,34 @@ const addFuelExpense = async (req, res) => {
 
 const getAllFuelExpensesByTruckId = async (req, res) => {
   try {
-    const { truckId } = req.query;
+    const { truckId, selectedDates } = req.query;
+
+    // Parse and format dates
+    const startDate = selectedDates
+      ? moment(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment(selectedDates[1]).endOf("day").toDate()
+      : null;
 
     if (!truckId) {
       return res.status(400).json({ message: "Truck ID is required" });
     }
 
-    // Fetch all fuel expenses for the given truckId
-    const fuelExpenses = await FuelExpense.find({ truckId }).sort({ date: 1 });
+    // Build the query filter
+    const query = { truckId };
+    if (startDate && endDate) {
+      query.date = { $gte: startDate, $lte: endDate };
+    }
+
+    // Fetch all fuel expenses for the given truckId and date range
+    const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
 
     if (fuelExpenses.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No fuel expenses found for this truck" });
+      return res.status(404).json({
+        message:
+          "No fuel expenses found for this truck in the given date range",
+      });
     }
 
     // Calculate mileage and range, and format the date
@@ -49,12 +65,12 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
       const formattedDate = date.toISOString().split("T")[0];
 
       // Calculate mileage
-      const mileage =
+      const range =
         index > 0 ? expense.currentKM - fuelExpenses[index - 1].currentKM : 0;
 
       // Calculate range - Assuming range is not given and not calculated here
       // If you have a formula for range, apply it here. For now, I set it as the mileage.
-      const range = mileage; // Adjust this if you have a specific formula for range
+      const mileage = range > 0 ? (range / expense.litres).toFixed(2) : 0; // Adjust this if you have a specific formula for range
 
       return {
         ...expense.toObject(), // Convert Mongoose document to plain object
