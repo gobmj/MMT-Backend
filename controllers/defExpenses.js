@@ -25,6 +25,18 @@ const addDefExpense = async (req, res) => {
     }
 };
 
+const getAllDefExpensesByTruckId = async (req, res) => {
+    try {
+        const { truckId } = req.params;
+        const defExpenses = await DefExpense.find({ truckId });
+        res.status(200).json(defExpenses);
+    } catch (error) {
+        console.error('Error retrieving def expenses:', error);
+        res.status(500).json({ message: 'Failed to retrieve def expenses' });
+    }
+};
+
 module.exports = {
     addDefExpense,
+    getAllDefExpensesByTruckId,
 };
