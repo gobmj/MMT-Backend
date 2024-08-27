@@ -70,7 +70,7 @@ const server = http.createServer(app);
 connectDB().then(() => {
 	try {
 		// Listen on provided IP and port, on all network interfaces.
-		server.listen(port, '16.170.162.234', () => {
+		server.listen(port, '0.0.0.0', () => {
 			console.log(`Server connected to http://16.170.162.234:${port}`);
 		});
 	} catch (error) {
