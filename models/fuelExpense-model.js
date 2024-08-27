@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 
-const FuelFillingSchema = new mongoose.Schema({
+const FuelExpenseSchema = new mongoose.Schema({
     truckId: {
         // type: mongoose.Schema.Types.ObjectId,
         type: String,
         ref: 'Truck',
         required: [true, "Truck ID is required"],
     },
+    addedBy: {
+        type: String,
+        required: [true, "User Id not recieved"],
+      },
     date: {
         type: Date,
         required: [true, "Date of fuel filling is required"],
@@ -33,4 +37,4 @@ const FuelFillingSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('FuelFilling', FuelFillingSchema);
+module.exports = mongoose.model('FuelExpense', FuelExpenseSchema);

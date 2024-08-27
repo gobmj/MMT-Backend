@@ -19,6 +19,7 @@ const trucksRoutes = require('./routes/trucks');
 const fuelExpensesRoutes = require('./routes/fuelExpenses');
 const defExpensesRoutes = require('./routes/defExpenses');
 const otherExpensesRoutes = require('./routes/otherExpenses');
+const metadata = require('./routes/metadata');
 
 // express app
 const app = express();
@@ -46,6 +47,8 @@ app.use('/api/v1/app/truck', trucksRoutes);
 app.use('/api/v1/app/fuelExpenses', fuelExpensesRoutes);
 app.use('/api/v1/app/defExpenses', defExpensesRoutes);
 app.use('/api/v1/app/otherExpenses', otherExpensesRoutes);
+
+app.use('/api/v1/app/metadata', metadata);
 
 // error handler
 app.use(error)

@@ -3,13 +3,14 @@ const OtherExpense = require('../models/otherExpense-model'); // Adjust the path
 // Controller to add a new other filling record
 const addOtherExpense = async (req, res) => {
     try {
-        const { truckId, date, category, cost, note } = req.body;
+        const { truckId, addedBy, date, category, cost, note } = req.body;
 
         console.log(req.body);
         
 
         const newOtherExpense = new OtherExpense({
             truckId,
+            addedBy,
             date,
             category,
             cost,

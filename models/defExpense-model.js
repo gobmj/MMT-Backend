@@ -10,13 +10,17 @@ const defExpenseSchema = new Schema({
     ref: "Truck",
     required: [true, "Truck ID is required"],
   },
+  addedBy: {
+    type: String,
+    required: [true, "User Id not recieved"],
+  },
   date: {
     type: Date,
     required: [true, "Please choose the date"],
   },
   createdAt: {
     type: Date,
-    default: () => new Date(), // Use a function to get the current date and time
+    default: () => new Date(),
   },
   currentKM: {
     type: Number,

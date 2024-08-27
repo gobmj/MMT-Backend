@@ -11,6 +11,10 @@ const otherExpenseSchema = new Schema({
     ref: "Truck",
     required: [true, "Truck ID is required"],
   },
+  addedBy: {
+    type: String,
+    required: [true, "User Id not recieved"],
+  },
   date: {
     type: Date,
     required: [true, "Please choose the date"],
