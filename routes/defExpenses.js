@@ -4,7 +4,7 @@ const { addDefExpense, getAllDefExpensesByTruckId } = require('../controllers/de
 const router = express.Router();
 
 router.post('/addDefExpense', addDefExpense);
-router.get('/getAllDefExpensesByTruckId/:truckId', getAllDefExpensesByTruckId);
+router.get('/getAllDefExpensesByTruckId', getAllDefExpensesByTruckId);
 // router.get('/getAllTrucks', getAllTrucks);
 // router.get('/getTruckById/:id', getTruckById); s
 // router.get('/getAllTrucksByUser/:userId', getAllTruckByUser);

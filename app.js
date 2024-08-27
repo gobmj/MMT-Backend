@@ -24,11 +24,13 @@ const otherExpensesRoutes = require('./routes/otherExpenses');
 const app = express();
 
 // middlewares
-app.use(cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
-    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-    maxAge: 10000,
-}))
+// app.use(cors({
+//     origin: ['http://localhost:3000', 'http://localhost:3001'],
+//     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+//     maxAge: 10000,
+// }))
+
+app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

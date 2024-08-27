@@ -61,7 +61,7 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
             };
         });
 
-        res.status(200).json(formattedFuelExpenses);
+        res.status(200).json(formattedFuelExpenses.reverse());
     } catch (error) {
         console.error('Error retrieving fuel expenses:', error);
         res.status(500).json({ message: 'Failed to retrieve fuel expenses' });

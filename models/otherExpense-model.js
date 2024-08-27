@@ -15,6 +15,10 @@ const otherExpenseSchema = new Schema({
     type: Date,
     required: [true, "Please choose the date"],
   },
+  createdAt: {
+    type: Date,
+    default: () => new Date(), // Use a function to get the current date and time
+  },
   category: {
     type: String,
     required: [true, "Please select a category"],

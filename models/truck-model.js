@@ -11,6 +11,10 @@ const TruckSchema = new mongoose.Schema({
         type: String,
         required: [true, "Truck registration number is required"],
     },
+    createdAt: {
+        type: Date,
+        default: () => new Date(), // Use a function to get the current date and time
+      },
     make: {
         type: String,
     },

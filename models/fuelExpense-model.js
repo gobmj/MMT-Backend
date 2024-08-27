@@ -11,6 +11,10 @@ const FuelFillingSchema = new mongoose.Schema({
         type: Date,
         required: [true, "Date of fuel filling is required"],
     },
+    createdAt: {
+        type: Date,
+        default: () => new Date(), // Use a function to get the current date and time
+      },
     currentKM: {
         type: Number,
         required: [true, "Current kilometers is required"],

@@ -14,6 +14,10 @@ const defExpenseSchema = new Schema({
     type: Date,
     required: [true, "Please choose the date"],
   },
+  createdAt: {
+    type: Date,
+    default: () => new Date(), // Use a function to get the current date and time
+  },
   currentKM: {
     type: Number,
     required: [true, "Please enter the current KM"],
