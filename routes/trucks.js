@@ -6,7 +6,7 @@ const router = express.Router();
 router.post('/addTruck', addTruck);
 router.get('/getAllTrucks', getAllTrucks);
 router.get('/getTruckById/:id', getTruckById); 
-router.get('/getAllTrucksByUser/:userId', getAllTruckByUser);
+router.get('/getAllTrucksByUser/:addedBy', getAllTruckByUser);
 router.put('/updateTruckById/:id', updateTruckById);
 router.delete('/deleteTruckById/:id', deleteTruckById);
 

@@ -1,5 +1,7 @@
 const FuelExpense = require('../models/fuelExpense-model');
 const DefExpense = require('../models/defExpense-model');
+const User = require('../models/user-model');
+const Truck = require('../models/truck-model');
 const OtherExpense = require('../models/otherExpense-model');
 const { default: mongoose } = require('mongoose');
 
@@ -152,7 +154,64 @@ const getMetadataByUserId = async (req, res) => {
     }
 };
 
+const getProfileMetadataByUserId = async(req,res)=>{
+    const {userId} = req.query;
+
+    try {
+        // Step 1: Calculate total kilometers from FuelExpense collection
+        const kmResult = await FuelExpense.aggregate([
+            { $match: { addedBy: userId } }, // Match records for the specific user
+            { $sort: { truckId: 1, date: -1 } }, // Sort by truckId and date in descending order
+
+            // Group by truckId to find the latest currentKM
+            {
+                $group: {
+                    _id: "$truckId",
+                    latestKM: { $first: "$currentKM" } // Get the latest currentKM (most recent entry)
+                }
+            },
+
+            // Group all records together to calculate total kilometers
+            {
+                $group: {
+                    _id: null, // Group all records into one group
+                    totalKM: { $sum: "$latestKM" } // Sum the latestKM values
+                }
+            },
+
+            // Format the output
+            {
+                $project: {
+                    _id: 0, // Exclude _id from the output
+                    totalKM: 1 // Include totalKM in the output
+                }
+            }
+        ]);
+
+        // Step 2: Calculate total number of trucks from Truck collection
+        const truckCount = await Truck.countDocuments({ addedBy: userId });
+        const user = await User.findOne({ googleId: userId });
+        // Calculate the number of days since the user was created
+    const createdAt = user.createdAt; // Assume `createdAt` is a Date object
+    const today = new Date();
+    const daysSinceCreation = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24));
+
+        // Combine results
+        const result = {
+            totalKM: kmResult.length > 0 ? kmResult[0].totalKM : 0,
+            totalTrucks: truckCount,
+            totalDays: daysSinceCreation + 1
+        };
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error retrieving total kilometers and total trucks:', error);
+        res.status(500).json({ error: 'An error occurred while retrieving total kilometers and total trucks.' });
+    }
+}
+
 module.exports = {
     getMetadataByTruckId,
-    getMetadataByUserId
+    getMetadataByUserId,
+    getProfileMetadataByUserId
 };
