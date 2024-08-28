@@ -1,8 +1,43 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const userModel = require('../models/user-model');
 const ErrorHandler = require('../middleware/errorHandlers');
 const { catchAsyncError } = require('../middleware/catchAsyncError');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Replace with your Google Client ID
+
+module.exports.signUpWithGoogle = async (req, res) => {
+  const { token } = req.body;
+
+  console.log("dcd",process.env.GOOGLE_CLIENT_ID,);
+  
+
+  try {
+    // Verify the token with Google
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID, // Specify the client ID
+    });
+
+    const payload = ticket.getPayload();
+    const userId = payload.sub;
+    const email = payload.email;
+    const picture = payload.picture;
+
+    // Optionally create a JWT token or any session handling here
+    const jwtToken = jwt.sign({ userId, email, picture }, 'your_secret_key', { expiresIn: '1h' });
+
+    // Respond with user data and token
+    res.status(200).json({
+      user: { userId, email, picture},
+      token: jwtToken,
+    });
+  } catch (error) {
+    console.error('Token verification failed:', error);
+    res.status(401).send('Unauthorized');
+  }
+};
 
 module.exports.logIn = catchAsyncError(async (req, res, next) => {
     const { username, password } = req.body;

@@ -3,10 +3,10 @@ const Truck = require('../models/truck-model'); // Adjust the path as needed
 
 const addTruck = async (req, res) => {
     try {
-        const { userId, registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body;
+        const { addedBy, registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body;
 
         const newTruck = new Truck({
-            userId,
+            addedBy,
             registrationNo,
             make,
             model,
@@ -50,9 +50,12 @@ const getTruckById = async (req, res) => {
 
 const getAllTruckByUser = async (req, res) => {    
     try {
-        const { userId } = req.params;
+        const { addedBy } = req.params;
 
-        const trucks = await Truck.find({ userId });
+        console.log(addedBy);
+        
+
+        const trucks = await Truck.find({ addedBy });
 
         if (trucks.length === 0) {
             return res.status(404).json({ message: 'No trucks found for this user' });
