@@ -154,8 +154,8 @@ const getMetadataByUserId = async (req, res) => {
     }
 };
 
-const getProfileMetadataByUserId = async(req,res)=>{
-    const {userId} = req.query;
+const getProfileMetadataByUserId = async (req, res) => {
+    const { userId } = req.query;
 
     try {
         // Step 1: Calculate total kilometers from FuelExpense collection
@@ -188,17 +188,25 @@ const getProfileMetadataByUserId = async(req,res)=>{
             }
         ]);
 
+        // Handle case where no fuel entries are found
+        const totalKM = kmResult.length > 0 ? kmResult[0].totalKM : 0;
+
         // Step 2: Calculate total number of trucks from Truck collection
         const truckCount = await Truck.countDocuments({ addedBy: userId });
+        
+        // Find the user and calculate the number of days since the user was created
         const user = await User.findOne({ googleId: userId });
-        // Calculate the number of days since the user was created
-    const createdAt = user.createdAt; // Assume `createdAt` is a Date object
-    const today = new Date();
-    const daysSinceCreation = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24));
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        const createdAt = user.createdAt; // Assume `createdAt` is a Date object
+        const today = new Date();
+        const daysSinceCreation = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24));
 
         // Combine results
         const result = {
-            totalKM: kmResult.length > 0 ? kmResult[0].totalKM : 0,
+            totalKM,
             totalTrucks: truckCount,
             totalDays: daysSinceCreation + 1
         };
@@ -208,7 +216,8 @@ const getProfileMetadataByUserId = async(req,res)=>{
         console.error('Error retrieving total kilometers and total trucks:', error);
         res.status(500).json({ error: 'An error occurred while retrieving total kilometers and total trucks.' });
     }
-}
+};
+
 
 module.exports = {
     getMetadataByTruckId,
