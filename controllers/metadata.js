@@ -1,5 +1,6 @@
 const FuelExpense = require('../models/fuelExpense-model');
 const DefExpense = require('../models/defExpense-model');
+const User = require('../models/user-model');
 const Truck = require('../models/truck-model');
 const OtherExpense = require('../models/otherExpense-model');
 const { default: mongoose } = require('mongoose');
@@ -189,11 +190,17 @@ const getProfileMetadataByUserId = async(req,res)=>{
 
         // Step 2: Calculate total number of trucks from Truck collection
         const truckCount = await Truck.countDocuments({ addedBy: userId });
+        const user = await User.findOne({ googleId: userId });
+        // Calculate the number of days since the user was created
+    const createdAt = user.createdAt; // Assume `createdAt` is a Date object
+    const today = new Date();
+    const daysSinceCreation = Math.floor((today - createdAt) / (1000 * 60 * 60 * 24));
 
         // Combine results
         const result = {
             totalKM: kmResult.length > 0 ? kmResult[0].totalKM : 0,
-            totalTrucks: truckCount
+            totalTrucks: truckCount,
+            totalDays: daysSinceCreation + 1
         };
 
         res.json(result);
