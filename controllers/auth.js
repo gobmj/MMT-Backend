@@ -5,7 +5,7 @@ const User = require("../models/user-model");
 const ErrorHandler = require("../middleware/errorHandlers");
 const { catchAsyncError } = require("../middleware/catchAsyncError");
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Replace with your Google Client ID
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); 
 
 module.exports.signUpWithGoogle = async (req, res) => {
   const { token } = req.body;
