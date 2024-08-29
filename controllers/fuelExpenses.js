@@ -24,13 +24,17 @@ const addFuelExpense = async (req, res) => {
   }
 };
 
-const getAllFuelExpensesByTruckId = async (req, res) => {
+const getAllFuelExpensesByTruckId = async (req, res) => {  
+
   try {
     const { truckId, selectedDates } = req.query;
 
+    console.log(selectedDates);
+    
+    
     // Parse and format dates
     const startDate = selectedDates
-      ? moment(selectedDates[0]).startOf("day").toDate()
+      ? moment(selectedDates[0]).endOf("day").toDate()
       : null;
     const endDate = selectedDates
       ? moment(selectedDates[1]).endOf("day").toDate()

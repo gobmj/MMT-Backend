@@ -30,7 +30,7 @@ const getAllDefExpensesByTruckId = async (req, res) => {
 
     // Parse and format dates
     const startDate = selectedDates
-      ? moment(selectedDates[0]).startOf("day").toDate()
+      ? moment(selectedDates[0]).endOf("day").toDate()
       : null;
     const endDate = selectedDates
       ? moment(selectedDates[1]).endOf("day").toDate()
