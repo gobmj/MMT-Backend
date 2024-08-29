@@ -34,11 +34,14 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
     
     // Parse and format dates
     const startDate = selectedDates
-      ? moment(selectedDates[0]).endOf("day").toDate()
+      ? moment(selectedDates[0]).toDate()
       : null;
     const endDate = selectedDates
-      ? moment(selectedDates[1]).endOf("day").toDate()
+      ? moment(selectedDates[1]).toDate()
       : null;
+
+      console.log(startDate, endDate);
+      
 
     if (!truckId) {
       return res.status(400).json({ message: "Truck ID is required" });
