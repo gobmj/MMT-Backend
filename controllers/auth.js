@@ -37,7 +37,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
       }
   
       // Optionally create a JWT token or any session handling here
-      const jwtToken = jwt.sign({ userId, email, picture }, 'your_secret_key', { expiresIn: '1h' });
+      const jwtToken = jwt.sign({ userId, email, picture }, process.env.SECRETKEY, { expiresIn: '1h' });
   
       // Respond with user data and token
       res.status(200).json({
@@ -135,26 +135,24 @@ module.exports.logOut = catchAsyncError(async (req, res, next) => {
 });
 
 module.exports.whoami = catchAsyncError(async (req, res, next) => {
-    const { token } = req.body;
+    const token = req.headers.authorization?.split(' ')[1]; // Retrieve token from Authorization header
 
     if (!token) {
         return next(new ErrorHandler("Token not found", 400));
     }
 
-    const decoded = jwt.verify(token, process.env.SECRETKEY);
+    try {
+        const decoded = jwt.verify(token, process.env.SECRETKEY);
 
-    if(!decoded){
-        res.json({
-            code: 401,
+        res.status(200).json({
+            message: 'User verified',
+            user: decoded
+        });
+    } catch (error) {
+        res.status(401).json({
             message: 'Token expired or invalid',
         });
     }
-
-    res.json({
-        code: 200,
-        message: 'user verified',
-        user: decoded
-    });
 });
 
 module.exports.changePassword = catchAsyncError(async (req, res, next) => {
