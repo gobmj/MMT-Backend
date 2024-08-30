@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const FuelExpense = require("../models/fuelExpense-model");
 const moment = require("moment");
 
@@ -49,8 +50,17 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
 
     // Build the query filter
     const query = { truckId };
+
     if (startDate && endDate) {
-      query.date = { $gte: startDate, $lte: endDate };
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
     }
 
     // Fetch all fuel expenses for the given truckId and date range
@@ -85,14 +95,41 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
       };
     });
 
-    res.status(200).json(formattedFuelExpenses.reverse());
+    res.status(200).json(formattedFuelExpenses);
   } catch (error) {
     console.error("Error retrieving fuel expenses:", error);
     res.status(500).json({ message: "Failed to retrieve fuel expenses" });
   }
 };
 
+const deleteFuelExpenseById = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      console.log(id);
+      
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({ message: 'Invalid Expense ID' });
+      }
+
+      const deletedTruck = await FuelExpense.findByIdAndDelete(id);
+
+      if (!deletedTruck) {
+          return res.status(404).json({ message: 'Expense not found' });
+      }
+
+      res.status(200).json({ message: 'Expense deleted' });
+  } catch (error) {
+      console.error('Error deleting truck:', error);
+      res.status(500).json({ message: 'Failed to delete Expense', error: error.message });
+  }
+}
+
 module.exports = {
   addFuelExpense,
   getAllFuelExpensesByTruckId,
+  deleteFuelExpenseById
 };
+
+

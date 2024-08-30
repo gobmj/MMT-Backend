@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const DefExpense = require("../models/defExpense-model"); // Adjust the path as needed
 const moment = require("moment");
 
@@ -69,14 +70,36 @@ const getAllDefExpensesByTruckId = async (req, res) => {
         range,
       };
     });
-    res.status(200).json(formattedDefExpenses.reverse());
+    res.status(200).json(formattedDefExpenses);
   } catch (error) {
     console.error("Error retrieving def expenses:", error);
     res.status(500).json({ message: "Failed to retrieve def expenses" });
   }
 };
 
+const deleteDefExpenseById = async (req, res) => {
+  try {
+      const { id } = req.params;
+
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+          return res.status(400).json({ message: 'Invalid Expense ID' });
+      }
+
+      const deletedTruck = await DefExpense.findByIdAndDelete(id);
+
+      if (!deletedTruck) {
+          return res.status(404).json({ message: 'Expense not found' });
+      }
+
+      res.status(200).json({ message: 'Expense deleted' });
+  } catch (error) {
+      console.error('Error deleting truck:', error);
+      res.status(500).json({ message: 'Failed to delete Expense', error: error.message });
+  }
+}
+
 module.exports = {
   addDefExpense,
   getAllDefExpensesByTruckId,
+  deleteDefExpenseById
 };

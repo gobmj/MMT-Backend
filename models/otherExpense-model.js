@@ -27,6 +27,9 @@ const otherExpenseSchema = new Schema({
     type: String,
     required: [true, "Please select a category"],
   },
+  other: {
+    type: String,
+  },
   cost: {
     type: Number,
     required: [true, "Please enter the cost"],
