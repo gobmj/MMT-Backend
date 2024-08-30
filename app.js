@@ -30,7 +30,8 @@ const app = express();
 app.use(cors({
     origin: process.env.CORS_URLS,
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-    maxAge: 10000,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }))
 app.use(logger('dev'));
 app.use(express.json());
