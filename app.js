@@ -28,7 +28,15 @@ const app = express();
 
 // middlewares
 app.use(cors({
-    origin: process.env.CORS_URLS,
+    origin: function(origin, callback) {
+        if (!origin || process.env.CORS_URLS.indexOf(origin) !== -1) {
+          // Allow the request
+          callback(null, origin);
+        } else {
+          // Reject the request
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
