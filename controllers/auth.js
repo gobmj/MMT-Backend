@@ -8,7 +8,8 @@ const { catchAsyncError } = require("../middleware/catchAsyncError");
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); 
 
 module.exports.signUpWithGoogle = async (req, res) => {
-  const { token } = req.body;
+  const token  =   req.headers.authorization?.split(" ")[1];
+
 
   try {
     // Verify the token with Google
@@ -48,7 +49,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
         isSubscribed
       },
       process.env.SECRETKEY,
-      { expiresIn: "h" }
+      { expiresIn: "14h" }
     );
 
     // Respond with user data and token
