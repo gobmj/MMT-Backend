@@ -5,6 +5,8 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors')
 
+require('dotenv').config();
+
 // middleware handlers
 const { error } = require('./utils/error');
 const isAuthenticated = require('./middleware/isAuthenticated');
@@ -25,13 +27,11 @@ const metadata = require('./routes/metadata');
 const app = express();
 
 // middlewares
-// app.use(cors({
-//     origin: ['http://localhost:3000', 'http://localhost:3001'],
-//     methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-//     maxAge: 10000,
-// }))
-
-app.use(cors())
+app.use(cors({
+    origin: process.env.CORS_URLS,
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    maxAge: 10000,
+}))
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
