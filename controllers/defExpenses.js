@@ -29,22 +29,31 @@ const getAllDefExpensesByTruckId = async (req, res) => {
   try {
     const { truckId, selectedDates } = req.query;
 
-    // Parse and format dates
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
     const startDate = selectedDates
-      ? moment(selectedDates[0]).toDate()
+      ? moment.utc(selectedDates[0]).startOf('day').toDate()
       : null;
     const endDate = selectedDates
-      ? moment(selectedDates[1]).toDate()
+      ? moment.utc(selectedDates[1]).endOf('day').toDate()
       : null;
-
-    if (!truckId) {
-      return res.status(400).json({ message: "Truck ID is required" });
-    }
 
     // Build the query filter
     const query = { truckId };
+
     if (startDate && endDate) {
-      query.date = { $gte: startDate, $lte: endDate };
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    if (!truckId) {
+      return res.status(400).json({ message: "Truck ID is required" });
     }
 
     // Fetch all fuel expenses for the given truckId and date range
@@ -55,6 +64,9 @@ const getAllDefExpensesByTruckId = async (req, res) => {
         message: "No def expenses found for this truck in the given date range",
       });
     }
+
+    const totalExpense = defExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+    
     const formattedDefExpenses = defExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
       const date = new Date(expense.date);
@@ -68,9 +80,13 @@ const getAllDefExpensesByTruckId = async (req, res) => {
         ...expense.toObject(), // Convert Mongoose document to plain object
         date: formattedDate,
         range,
+        key: index
       };
     });
-    res.status(200).json(formattedDefExpenses);
+    res.status(200).json({
+      expenses:formattedDefExpenses,
+      totalExpense 
+  });
   } catch (error) {
     console.error("Error retrieving def expenses:", error);
     res.status(500).json({ message: "Failed to retrieve def expenses" });

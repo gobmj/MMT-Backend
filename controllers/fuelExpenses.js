@@ -7,6 +7,9 @@ const addFuelExpense = async (req, res) => {
   try {
     const { truckId, addedBy, date, currentKM, litres, cost, note } = req.body;
 
+    console.log(date);
+    
+
     const newFuelExpense = new FuelExpense({
       truckId,
       addedBy,
@@ -26,27 +29,21 @@ const addFuelExpense = async (req, res) => {
 };
 
 const getAllFuelExpensesByTruckId = async (req, res) => {  
-
   try {
     const { truckId, selectedDates } = req.query;
-
-    console.log(selectedDates);
-    
-    
-    // Parse and format dates
-    const startDate = selectedDates
-      ? moment(selectedDates[0]).toDate()
-      : null;
-    const endDate = selectedDates
-      ? moment(selectedDates[1]).toDate()
-      : null;
-
-      console.log(startDate, endDate);
-      
 
     if (!truckId) {
       return res.status(400).json({ message: "Truck ID is required" });
     }
+    
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf('day').toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf('day').toDate()
+      : null;
 
     // Build the query filter
     const query = { truckId };
@@ -73,6 +70,8 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
       });
     }
 
+    const totalExpense = fuelExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+
     // Calculate mileage and range, and format the date
     const formattedFuelExpenses = fuelExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
@@ -92,15 +91,20 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
         date: formattedDate,
         mileage,
         range,
+        key: index
       };
     });
 
-    res.status(200).json(formattedFuelExpenses);
+    res.status(200).json({
+      expenses: formattedFuelExpenses,
+      totalExpense 
+    });
   } catch (error) {
     console.error("Error retrieving fuel expenses:", error);
     res.status(500).json({ message: "Failed to retrieve fuel expenses" });
   }
 };
+
 
 const deleteFuelExpenseById = async (req, res) => {
   try {

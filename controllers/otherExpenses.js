@@ -40,18 +40,31 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
   try {
     const { truckId, selectedDates } = req.query;
 
-    // Parse and format dates
-    const startDate = selectedDates ? moment(selectedDates[0]).toDate() : null;
-    const endDate = selectedDates ? moment(selectedDates[1]).toDate() : null;
-
-    if (!truckId) {
-      return res.status(400).json({ message: "Truck ID is required" });
-    }
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf('day').toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf('day').toDate()
+      : null;
 
     // Build the query filter
     const query = { truckId };
+
     if (startDate && endDate) {
-      query.date = { $gte: startDate, $lte: endDate };
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }endDate = selectedDates ? moment(selectedDates[1]).toDate() : null;
+
+    if (!truckId) {
+      return res.status(400).json({ message: "Truck ID is required" });
     }
 
     const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
@@ -62,6 +75,9 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
           "No other expenses found for this truck in the given date range",
       });
     }
+
+    const totalExpense = otherExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+
     const formattedOtherExpenses = otherExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
       const date = new Date(expense.date);
@@ -74,9 +90,14 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
           expense.category === "other" 
             ? expense.other 
             : (otherNameConversions[expense.category] || "Other"),
+
+        key:index
       };
     });
-    res.status(200).json(formattedOtherExpenses);
+    res.status(200).json({
+      expenses:formattedOtherExpenses,
+      totalExpense,
+  });
   } catch (error) {
     console.error("Error retrieving other expenses:", error);
     res.status(500).json({ message: "Failed to retrieve other expenses" });
