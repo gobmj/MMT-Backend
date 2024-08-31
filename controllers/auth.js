@@ -26,7 +26,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
 
     let user = await User.findOne({ googleId: userId });
 
-    const isSubscribed= user.isSubscribed ? user.isSubscribed : false;
+    const isSubscribed = user ? user.isSubscribed : false;
 
     if (!user) {
       // Create a new user if not found
