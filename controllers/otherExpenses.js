@@ -40,6 +40,10 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
   try {
     const { truckId, selectedDates } = req.query;
 
+    if (!truckId) {
+      return res.status(400).json({ message: "Truck ID is required" });
+    }
+
     // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
     const startDate = selectedDates
       ? moment.utc(selectedDates[0]).startOf('day').toDate()
@@ -61,11 +65,7 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
         // Match the range between startDate and endDate
         query.date = { $gte: startDate, $lte: endDate };
       }
-    }endDate = selectedDates ? moment(selectedDates[1]).toDate() : null;
-
-    if (!truckId) {
-      return res.status(400).json({ message: "Truck ID is required" });
-    }
+    } 
 
     const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
 
