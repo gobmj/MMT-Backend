@@ -5,40 +5,55 @@ const Truck = require('../models/truck-model');
 const OtherExpense = require('../models/otherExpense-model');
 const { default: mongoose } = require('mongoose');
 
+const moment = require("moment")
+
 const getMetadataByTruckId = async (req, res) => {
     const { truckId } = req.query;
-    
 
     if (!mongoose.Types.ObjectId.isValid(truckId)) {
         return res.status(400).json({ error: 'Invalid truck ID' });
     }
 
+    const startOfMonth = moment().startOf('month').toDate();
+    const endOfMonth = moment().endOf('month').toDate();
+
     try {
-        // Calculate total fuel expenses
         const fuelResult = await FuelExpense.aggregate([
-            { $match: { truckId: truckId } },
+            {
+                $match: {
+                    truckId: truckId,
+                    date: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
             { $group: { _id: null, totalCost: { $sum: "$cost" } } }
         ]);
 
         const fuelTotal = fuelResult.length > 0 ? fuelResult[0].totalCost : 0;
 
-        // Calculate total DEF expenses
         const defResult = await DefExpense.aggregate([
-            { $match: { truckId: truckId } },
+            {
+                $match: {
+                    truckId: truckId,
+                    date: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
             { $group: { _id: null, totalCost: { $sum: "$cost" } } }
         ]);
 
         const defTotal = defResult.length > 0 ? defResult[0].totalCost : 0;
 
-        // Calculate total other expenses
         const otherResult = await OtherExpense.aggregate([
-            { $match: { truckId: truckId } },
+            {
+                $match: {
+                    truckId: truckId,
+                    date: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
             { $group: { _id: null, totalCost: { $sum: "$cost" } } }
         ]);
 
         const otherTotal = otherResult.length > 0 ? otherResult[0].totalCost : 0;
 
-        // Combine results
         const totalExpenses = {
             fuelTotal,
             defTotal,
@@ -52,6 +67,7 @@ const getMetadataByTruckId = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 };
+
 
 const getMetadataByUserId = async (req, res) => {
     const { userId } = req.query;
