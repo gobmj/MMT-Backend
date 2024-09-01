@@ -8,7 +8,6 @@ const addFuelExpense = async (req, res) => {
     const { truckId, addedBy, date, currentKM, litres, cost, note } = req.body;
 
     console.log(date);
-    
 
     const newFuelExpense = new FuelExpense({
       truckId,
@@ -28,21 +27,20 @@ const addFuelExpense = async (req, res) => {
   }
 };
 
-const getAllFuelExpensesByTruckId = async (req, res) => {  
+const getAllFuelExpensesByTruckId = async (req, res) => {
   try {
     const { truckId, selectedDates } = req.query;
 
     if (!truckId) {
       return res.status(400).json({ message: "Truck ID is required" });
     }
-    
 
     // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
     const startDate = selectedDates
-      ? moment.utc(selectedDates[0]).startOf('day').toDate()
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
       : null;
     const endDate = selectedDates
-      ? moment.utc(selectedDates[1]).endOf('day').toDate()
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
       : null;
 
     // Build the query filter
@@ -70,15 +68,23 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
       });
     }
 
-    const totalExpense = fuelExpenses.reduce((sum, expense) => sum + expense.cost, 0);
+    const totalExpense = fuelExpenses.reduce(
+      (sum, expense) => sum + expense.cost,
+      0
+    );
 
     // Calculate mileage and range, and format the date
     const formattedFuelExpenses = fuelExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
-      const date = new Date(expense.date);
-      const formattedDate = date.toISOString().split("T")[0];
+      // const date = new Date(expense.date);
+      // const formattedDate = date.toISOString().split("T")[0];
 
-      // Calculate mileage
+      const date = new Date(expense.date);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
       const range =
         index > 0 ? expense.currentKM - fuelExpenses[index - 1].currentKM : 0;
 
@@ -87,17 +93,17 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
       const mileage = range > 0 ? (range / expense.litres).toFixed(2) : 0; // Adjust this if you have a specific formula for range
 
       return {
-        ...expense.toObject(), // Convert Mongoose document to plain object
+        ...expense.toObject(),
         date: formattedDate,
         mileage,
         range,
-        key: index
+        key: index,
       };
     });
 
     res.status(200).json({
       expenses: formattedFuelExpenses,
-      totalExpense 
+      totalExpense,
     });
   } catch (error) {
     console.error("Error retrieving fuel expenses:", error);
@@ -105,35 +111,33 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
   }
 };
 
-
 const deleteFuelExpenseById = async (req, res) => {
   try {
-      const { id } = req.params;
+    const { id } = req.params;
 
-      console.log(id);
-      
+    console.log(id);
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-          return res.status(400).json({ message: 'Invalid Expense ID' });
-      }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid Expense ID" });
+    }
 
-      const deletedTruck = await FuelExpense.findByIdAndDelete(id);
+    const deletedTruck = await FuelExpense.findByIdAndDelete(id);
 
-      if (!deletedTruck) {
-          return res.status(404).json({ message: 'Expense not found' });
-      }
+    if (!deletedTruck) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
 
-      res.status(200).json({ message: 'Expense deleted' });
+    res.status(200).json({ message: "Expense deleted" });
   } catch (error) {
-      console.error('Error deleting truck:', error);
-      res.status(500).json({ message: 'Failed to delete Expense', error: error.message });
+    console.error("Error deleting truck:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to delete Expense", error: error.message });
   }
-}
+};
 
 module.exports = {
   addFuelExpense,
   getAllFuelExpensesByTruckId,
-  deleteFuelExpenseById
+  deleteFuelExpenseById,
 };
-
-

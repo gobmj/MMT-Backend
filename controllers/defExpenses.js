@@ -69,8 +69,14 @@ const getAllDefExpensesByTruckId = async (req, res) => {
     
     const formattedDefExpenses = defExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
+      // const date = new Date(expense.date);
+      // const formattedDate = date.toISOString().split("T")[0];
+
       const date = new Date(expense.date);
-      const formattedDate = date.toISOString().split("T")[0];
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
 
       // Calculate mileage
       const range =
