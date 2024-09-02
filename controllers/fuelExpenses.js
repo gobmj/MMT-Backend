@@ -173,12 +173,12 @@ const downloadFuelExpensesExcel = async (req, res) => {
     console.log("Query:", query);
 
     // Fetch all def expenses for the given truckId and date range
-    const defExpenses = await DefExpense.find(query).sort({ date: 1 });
+    const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
 
-    if (defExpenses.length === 0) {
+    if (fuelExpenses.length === 0) {
       console.log("No expenses found for the given query");
       return res.status(404).json({
-        message: "No def expenses found for this truck in the given date range",
+        message: "No fuel expenses found for this truck in the given date range",
       });
     }
 
