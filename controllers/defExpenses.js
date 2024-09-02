@@ -1,5 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const DefExpense = require("../models/defExpense-model");
+const Truck = require("../models/truck-model");
 const moment = require("moment");
 const XLSX = require("xlsx");
 
