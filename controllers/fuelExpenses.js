@@ -1,6 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const FuelExpense = require("../models/fuelExpense-model");
 const moment = require("moment");
+const ExcelJS = require('exceljs');
 const XLSX = require("xlsx");
 
 // Controller to add a new fuel filling record
@@ -172,7 +173,7 @@ const downloadFuelExpensesExcel = async (req, res) => {
 
     console.log("Query:", query);
 
-    // Fetch all def expenses for the given truckId and date range
+    // Fetch all fuel expenses for the given truckId and date range
     const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
 
     if (fuelExpenses.length === 0) {
@@ -206,12 +207,34 @@ const downloadFuelExpensesExcel = async (req, res) => {
     console.log("Data for Excel:", data);
 
     // Create a new workbook and worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Fuel Expenses");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Fuel Expenses");
+
+    // Add the merged header row
+    worksheet.mergeCells('A1:G1');
+    worksheet.getCell('A1').value = `Fuel Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell('A1').font = { bold: true };
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+
+    // Add the headings
+    const headings = ["Date", "Current KM", "Litres", "Cost", "Note", "Range", "Mileage"];
+    worksheet.addRow(headings).font = { bold: true };
+
+    // Add the data
+    data.forEach(row => {
+      worksheet.addRow([
+        row.Date,
+        row["Current KM"],
+        row.Litres,
+        row.Cost,
+        row.Note,
+        row.Range,
+        row.Mileage
+      ]);
+    });
 
     // Write the workbook to a buffer
-    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
+    const buffer = await workbook.xlsx.writeBuffer();
 
     // Set headers for the response
     res.setHeader(
