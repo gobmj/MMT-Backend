@@ -1,11 +1,12 @@
 const express = require('express');
-const { addDefExpense, getAllDefExpensesByTruckId, deleteDefExpenseById } = require('../controllers/defExpenses');
+const { addDefExpense, getAllDefExpensesByTruckId, deleteDefExpenseById, downloadDefExpensesExcel } = require('../controllers/defExpenses');
 
 const router = express.Router();
 
 router.post('/addDefExpense', addDefExpense);
 router.get('/getAllDefExpensesByTruckId', getAllDefExpensesByTruckId);
 router.delete('/deleteDefExpenseById/:id', deleteDefExpenseById);
+router.get('/downloadDefExpensesExcel', downloadDefExpensesExcel);
 
 // router.get('/getAllTrucks', getAllTrucks);
 // router.get('/getTruckById/:id', getTruckById); s

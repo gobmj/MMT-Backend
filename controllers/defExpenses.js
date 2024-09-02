@@ -1,6 +1,10 @@
 const { default: mongoose } = require("mongoose");
-const DefExpense = require("../models/defExpense-model"); // Adjust the path as needed
+const DefExpense = require("../models/defExpense-model");
 const moment = require("moment");
+const fs = require('fs');
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const XLSX = require('xlsx');
 
 // Controller to add a new def filling record
 const addDefExpense = async (req, res) => {
@@ -114,8 +118,107 @@ const deleteDefExpenseById = async (req, res) => {
   }
 }
 
+const downloadDefExpensesExcel = async (req, res) => {
+  try {
+    const { truckId, selectedDates } = req.query;
+
+    if (!truckId) {
+      console.log("Truck ID is missing");
+      return res.status(400).json({ message: "Truck ID is required" });
+    }
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    console.log("Start Date:", startDate);
+    console.log("End Date:", endDate);
+
+    // Build the query filter
+    const query = { truckId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = { $eq: startDate };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    console.log("Query:", query);
+
+    // Fetch all def expenses for the given truckId and date range
+    const defExpenses = await DefExpense.find(query).sort({ date: 1 });
+
+    if (defExpenses.length === 0) {
+      console.log("No expenses found for the given query");
+      return res.status(404).json({
+        message: "No def expenses found for this truck in the given date range",
+      });
+    }
+
+    // Prepare data for Excel
+    const data = defExpenses.map((expense, index) => {
+      const date = new Date(expense.date);
+      const formattedDate = date.toISOString().split("T")[0];
+
+      const range =
+        index > 0 ? expense.currentKM - defExpenses[index - 1].currentKM : 0;
+
+      return {
+        Date: formattedDate,
+        "Truck ID": expense.truckId,
+        "Added By": expense.addedBy,
+        "Current KM": expense.currentKM,
+        Litres: expense.litres,
+        Cost: expense.cost,
+        Note: expense.note || "",
+        Range: range,
+      };
+    });
+
+    console.log("Data for Excel:", data);
+
+    // Create a new workbook and worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, "Def Expenses");
+
+    // Generate a unique filename
+    const uniqueId = uuidv4();
+    const fileName = `defExpenses_${uniqueId}.xlsx`;
+    const filePath = path.join(__dirname, 'uploads', fileName);
+
+    // Ensure the uploads directory exists
+    if (!fs.existsSync(path.dirname(filePath))) {
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    }
+
+    // Write Excel file to the specified path
+    XLSX.writeFile(wb, filePath);
+
+    console.log("Excel file created at:", filePath);
+
+    // Construct the public URL or path to the file
+    const publicUrl = `https://managemytruck.me/uploads/${fileName}`;
+
+    // Respond with the URL to download the file
+    res.status(200).json({ fileUrl: publicUrl });
+  } catch (error) {
+    console.error("Error generating Excel file:", error);
+    res.status(500).json({ message: "Failed to generate Excel file", error: error.message });
+  }
+};
+
 module.exports = {
   addDefExpense,
   getAllDefExpensesByTruckId,
-  deleteDefExpenseById
+  deleteDefExpenseById,
+  downloadDefExpensesExcel
 };
