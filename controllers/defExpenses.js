@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const DefExpense = require("../models/defExpense-model");
-const Truck = require("../models/truck-model");
+// const Truck = require("../models/truck-model");
 const moment = require("moment");
 const XLSX = require("xlsx");
 
@@ -147,14 +147,6 @@ const downloadDefExpensesExcel = async (req, res) => {
     console.log("Start Date:", startDate);
     console.log("End Date:", endDate);
 
-    // Fetch the truck details using the truckId
-    const truck = await Truck.findById(truckId);
-    if (!truck) {
-      console.log("Truck not found");
-      return res.status(404).json({ message: "Truck not found" });
-    }
-    const registrationNumber = truck.registrationNumber || "Unknown";
-
     // Build the query filter
     const query = { truckId };
 
@@ -203,13 +195,6 @@ const downloadDefExpensesExcel = async (req, res) => {
     // Create a new workbook and worksheet
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(data);
-
-    // Add the registration number as a heading in the first row
-    XLSX.utils.sheet_add_aoa(ws, [[`Truck Registration Number: ${registrationNumber}`]], { origin: "A1" });
-
-    // Shift the data down by one row to accommodate the heading
-    XLSX.utils.sheet_add_json(ws, data, { origin: "A2", skipHeader: true });
-
     XLSX.utils.book_append_sheet(wb, ws, "Def Expenses");
 
     // Write the workbook to a buffer
