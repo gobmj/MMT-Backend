@@ -80,8 +80,14 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
 
     const formattedOtherExpenses = otherExpenses.map((expense, index) => {
       // Format the date to 'YYYY-MM-DD'
+      // const date = new Date(expense.date);
+      // const formattedDate = date.toISOString().split("T")[0];
+
       const date = new Date(expense.date);
-      const formattedDate = date.toISOString().split("T")[0];
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
 
       return {
         ...expense.toObject(), // Convert Mongoose document to plain object
