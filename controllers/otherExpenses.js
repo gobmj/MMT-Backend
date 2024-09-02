@@ -167,13 +167,13 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
     console.log("Query:", query);
 
-    // Fetch all def expenses for the given truckId and date range
+    // Fetch all other expenses for the given truckId and date range
     const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
 
     if (otherExpenses.length === 0) {
       console.log("No expenses found for the given query");
       return res.status(404).json({
-        message: "No def expenses found for this truck in the given date range",
+        message: "No other expenses found for this truck in the given date range",
       });
     }
 
@@ -204,7 +204,7 @@ const downloadOtherExpensesExcel = async (req, res) => {
     // Set headers for the response
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=defExpenses.xlsx"
+      "attachment; filename=otherExpenses.xlsx"
     );
     res.setHeader(
       "Content-Type",
