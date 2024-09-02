@@ -194,7 +194,6 @@ const downloadFuelExpensesExcel = async (req, res) => {
 
       return {
         Date: formattedDate,
-        "Truck ID": expense.truckId,
         "Current KM": expense.currentKM,
         Litres: expense.litres,
         Cost: expense.cost,
