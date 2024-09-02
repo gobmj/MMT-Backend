@@ -1,9 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const DefExpense = require("../models/defExpense-model");
 const moment = require("moment");
-const fs = require("fs");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
 const XLSX = require("xlsx");
 
 // Controller to add a new def filling record
