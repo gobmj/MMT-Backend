@@ -184,7 +184,7 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
       return {
         Date: formattedDate,
-        Category: expense.category,
+        Category: expense.category==="other"?expense.other:expense.category,
         Cost: expense.cost,
         Note: expense.note || "",
       };
