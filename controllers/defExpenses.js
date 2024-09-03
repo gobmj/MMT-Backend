@@ -185,8 +185,8 @@ const downloadDefExpensesExcel = async (req, res) => {
         "Current KM": expense.currentKM,
         Litres: expense.litres,
         Cost: expense.cost,
-        Note: expense.note || "",
         Range: range,
+        Note: expense.note || "",
       };
     });
 

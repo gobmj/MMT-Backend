@@ -187,7 +187,6 @@ const downloadOtherExpensesExcel = async (req, res) => {
         Category: expense.category,
         Cost: expense.cost,
         Note: expense.note || "",
-        Action: expense.action || "",
       };
     });
 

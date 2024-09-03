@@ -3,6 +3,7 @@ const FuelExpense = require("../models/fuelExpense-model");
 const moment = require("moment");
 const ExcelJS = require('exceljs');
 const XLSX = require("xlsx");
+const TruckModel = require("../models/truck-model");
 
 // Controller to add a new fuel filling record
 const addFuelExpense = async (req, res) => {
@@ -155,9 +156,6 @@ const downloadFuelExpensesExcel = async (req, res) => {
       ? moment.utc(selectedDates[1]).endOf("day").toDate()
       : null;
 
-    console.log("Start Date:", startDate);
-    console.log("End Date:", endDate);
-
     // Build the query filter
     const query = { truckId };
 
@@ -175,6 +173,10 @@ const downloadFuelExpensesExcel = async (req, res) => {
 
     // Fetch all fuel expenses for the given truckId and date range
     const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
+    const truck = await TruckModel.findById(truckId);
+
+    console.log("truck",truck);
+    
 
     if (fuelExpenses.length === 0) {
       console.log("No expenses found for the given query");
@@ -212,8 +214,14 @@ const downloadFuelExpensesExcel = async (req, res) => {
 
     // Add the merged header row
     worksheet.mergeCells('A1:G1');
-    worksheet.getCell('A1').value = `Fuel Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell('A1').value = `${truck.registrationNo} - Fuel Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
     worksheet.getCell('A1').font = { bold: true };
+    worksheet.getCell('A1').fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '000000' } // Black background
+  };
+  worksheet.getCell('A1').font.color = { argb: 'FFFFFF' }; // White font color
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
     // Add the headings
