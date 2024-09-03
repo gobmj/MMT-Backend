@@ -44,6 +44,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
     const jwtToken = jwt.sign(
       {
         userId,
+        name,
         email,
         picture,
         isSubscribed
