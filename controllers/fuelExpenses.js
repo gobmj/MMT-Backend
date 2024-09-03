@@ -2,7 +2,6 @@ const { default: mongoose } = require("mongoose");
 const FuelExpense = require("../models/fuelExpense-model");
 const moment = require("moment");
 const ExcelJS = require('exceljs');
-const XLSX = require("xlsx");
 const TruckModel = require("../models/truck-model");
 
 // Controller to add a new fuel filling record
