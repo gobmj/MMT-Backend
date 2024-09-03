@@ -49,7 +49,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
         isSubscribed
       },
       process.env.SECRETKEY,
-      { expiresIn: "24h" }
+      { expiresIn: "7d" }
     );
 
     // Respond with user data and token
