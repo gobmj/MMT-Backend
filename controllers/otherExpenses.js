@@ -246,6 +246,7 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
     // Fetch all other expenses for the given truckId and date range
     const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
+    const truck = await TruckModel.findById(truckId);
 
     if (otherExpenses.length === 0) {
       console.log("No expenses found for the given query");
@@ -256,14 +257,13 @@ const downloadOtherExpensesExcel = async (req, res) => {
     }
 
     // Prepare data for Excel
-    const data = otherExpenses.map((expense, index) => {
+    const data = otherExpenses.map((expense) => {
       const date = new Date(expense.date);
       const formattedDate = date.toISOString().split("T")[0];
 
       return {
         Date: formattedDate,
-        Category:
-          expense.category === "other" ? expense.other : expense.category,
+        Category: expense.category === "other" ? expense.other : expense.category,
         Cost: expense.cost,
         Note: expense.note || "",
       };
@@ -272,12 +272,36 @@ const downloadOtherExpensesExcel = async (req, res) => {
     console.log("Data for Excel:", data);
 
     // Create a new workbook and worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(data);
-    XLSX.utils.book_append_sheet(wb, ws, "Other Expenses");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Other Expenses");
+
+    // Add the merged header row
+    worksheet.mergeCells('A1:D1');
+    worksheet.getCell('A1').value = `${truck.registrationNo} - Other Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell('A1').font = { bold: true, color: { argb: 'FFFFFF' } }; // White font color
+    worksheet.getCell('A1').fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '000000' }, // Black background
+    };
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+
+    // Add the headings
+    const headings = ["Date", "Category", "Cost", "Note"];
+    worksheet.addRow(headings).font = { bold: true };
+
+    // Add the data
+    data.forEach(row => {
+      worksheet.addRow([
+        row.Date,
+        row.Category,
+        row.Cost,
+        row.Note,
+      ]);
+    });
 
     // Write the workbook to a buffer
-    const buffer = XLSX.write(wb, { bookType: "xlsx", type: "buffer" });
+    const buffer = await workbook.xlsx.writeBuffer();
 
     // Set headers for the response
     res.setHeader(
