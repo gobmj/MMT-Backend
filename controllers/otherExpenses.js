@@ -1,8 +1,8 @@
 const { default: mongoose } = require("mongoose");
 const OtherExpense = require("../models/otherExpense-model"); // Adjust the path as needed
 const moment = require("moment");
-const ExcelJS = require('exceljs');
-const TruckModel = require("../models/truck-model");
+const ExcelJS = require("exceljs");
+const TruckExpense = require("../models/truck-model");
 
 const otherNameConversions = {
   toll: "Toll",
@@ -135,9 +135,7 @@ const getAllOtherExpensesByUserId = async (req, res) => {
     if (startDate && endDate) {
       if (startDate.toDateString() === endDate.toDateString()) {
         // If startDate and endDate are the same, match that specific date
-        query.date = {
-          $eq: startDate,
-        };
+        query.date = { $eq: startDate };
       } else {
         // Match the range between startDate and endDate
         query.date = { $gte: startDate, $lte: endDate };
@@ -149,34 +147,40 @@ const getAllOtherExpensesByUserId = async (req, res) => {
     if (otherExpenses.length === 0) {
       return res.status(404).json({
         message:
-          "No other expenses found for this truck in the given date range",
+          "No other expenses found for this user in the given date range",
       });
     }
 
-    const totalExpense = otherExpenses.reduce(
+    // Prepare the other expenses with registration number
+    const formattedOtherExpenses = await Promise.all(
+      otherExpenses.map(async (expense, index) => {
+        const truck = await TruckExpense.findById(expense.truckId);
+        const registrationNo = truck ? truck.registrationNo : "Unknown";
+
+        const date = new Date(expense.date);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+        const year = date.getFullYear();
+        const formattedDate = `${day}-${month}-${year}`;
+
+        return {
+          ...expense.toObject(), // Convert Mongoose document to plain object
+          date: formattedDate,
+          registrationNo: registrationNo,
+          category:
+            expense.category === "other"
+              ? expense.other
+              : otherNameConversions[expense.category] || "Other",
+          key: index,
+        };
+      })
+    );
+
+    const totalExpense = formattedOtherExpenses.reduce(
       (sum, expense) => sum + expense.cost,
       0
     );
 
-    const formattedOtherExpenses = otherExpenses.map((expense, index) => {
-
-      const date = new Date(expense.date);
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
-      const year = date.getFullYear();
-      const formattedDate = `${day}-${month}-${year}`;
-
-      return {
-        ...expense.toObject(), // Convert Mongoose document to plain object
-        date: formattedDate,
-        category:
-          expense.category === "other"
-            ? expense.other
-            : otherNameConversions[expense.category] || "Other",
-
-        key: index,
-      };
-    });
     res.status(200).json({
       expenses: formattedOtherExpenses,
       totalExpense,
@@ -244,12 +248,13 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
     // Fetch all other expenses for the given truckId and date range
     const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
-    const truck = await TruckModel.findById(truckId);
+    const truck = await TruckExpense.findById(truckId);
 
     if (otherExpenses.length === 0) {
       console.log("No expenses found for the given query");
       return res.status(404).json({
-        message: "No other expenses found for this truck in the given date range",
+        message:
+          "No other expenses found for this truck in the given date range",
       });
     }
 
@@ -260,7 +265,8 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
       return {
         Date: formattedDate,
-        Category: expense.category === "other" ? expense.other : expense.category,
+        Category:
+          expense.category === "other" ? expense.other : expense.category,
         Cost: expense.cost,
         Note: expense.note || "",
       };
@@ -273,24 +279,137 @@ const downloadOtherExpensesExcel = async (req, res) => {
     const worksheet = workbook.addWorksheet("Other Expenses");
 
     // Add the merged header row
-    worksheet.mergeCells('A1:D1');
-    worksheet.getCell('A1').value = `${truck.registrationNo} - Other Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
-    worksheet.getCell('A1').font = { bold: true, color: { argb: 'FFFFFF' } }; // White font color
-    worksheet.getCell('A1').fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '000000' }, // Black background
+    worksheet.mergeCells("A1:D1");
+    worksheet.getCell(
+      "A1"
+    ).value = `${truck.registrationNo} - Other Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell("A1").font = { bold: true, color: { argb: "FFFFFF" } }; // White font color
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" }, // Black background
     };
-    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.getCell("A1").alignment = { horizontal: "center" };
 
     // Add the headings
     const headings = ["Date", "Category", "Cost", "Note"];
     worksheet.addRow(headings).font = { bold: true };
 
     // Add the data
-    data.forEach(row => {
+    data.forEach((row) => {
+      worksheet.addRow([row.Date, row.Category, row.Cost, row.Note]);
+    });
+
+    // Write the workbook to a buffer
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    // Set headers for the response
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=otherExpenses.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  } catch (error) {
+    console.error("Error generating Excel file:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to generate Excel file", error: error.message });
+  }
+};
+
+const downloadAllOtherExpensesExcel = async (req, res) => {
+  try {
+    const { userId, selectedDates } = req.query;
+
+    if (!userId) {
+      console.log("User ID is missing");
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    // Build the query filter
+    const query = { addedBy: userId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = { $eq: startDate };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    // Fetch all other expenses for the given userId and date range
+    const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
+
+    if (otherExpenses.length === 0) {
+      console.log("No expenses found for the given query");
+      return res.status(404).json({
+        message:
+          "No other expenses found for this user in the given date range",
+      });
+    }
+
+    // Prepare data for Excel with registration numbers
+    const data = await Promise.all(
+      otherExpenses.map(async (expense) => {
+        const truck = await TruckExpense.findById(expense.truckId);
+        const registrationNo = truck ? truck.registrationNo : "Unknown";
+
+        const date = new Date(expense.date);
+        const formattedDate = date.toISOString().split("T")[0];
+
+        return {
+          Date: formattedDate,
+          "Registration No": registrationNo,
+          Category:
+            expense.category === "other" ? expense.other : expense.category,
+          Cost: expense.cost,
+          Note: expense.note || "",
+        };
+      })
+    );
+
+    console.log("Data for Excel:", data);
+
+    // Create a new workbook and worksheet
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Other Expenses");
+
+    // Add the merged header row
+    worksheet.mergeCells("A1:E1");
+    worksheet.getCell(
+      "A1"
+    ).value = `Other Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell("A1").font = { bold: true, color: { argb: "FFFFFF" } }; // White font color
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" }, // Black background
+    };
+    worksheet.getCell("A1").alignment = { horizontal: "center" };
+
+    // Add the headings
+    const headings = ["Date", "Registration No", "Category", "Cost", "Note"];
+    worksheet.addRow(headings).font = { bold: true };
+
+    // Add the data
+    data.forEach((row) => {
       worksheet.addRow([
         row.Date,
+        row["Registration No"],
         row.Category,
         row.Cost,
         row.Note,
@@ -321,7 +440,8 @@ const downloadOtherExpensesExcel = async (req, res) => {
 module.exports = {
   addOtherExpense,
   getAllOtherExpensesByTruckId,
+  getAllOtherExpensesByUserId,
   deleteOtherExpenseById,
   downloadOtherExpensesExcel,
-  getAllOtherExpensesByUserId,
+  downloadAllOtherExpensesExcel,
 };
