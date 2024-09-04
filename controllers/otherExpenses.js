@@ -112,6 +112,80 @@ const getAllOtherExpensesByTruckId = async (req, res) => {
   }
 };
 
+const getAllOtherExpensesByUserId = async (req, res) => {
+  try {
+    const { userId, selectedDates } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    // Build the query filter
+    const query = { addedBy: userId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    const otherExpenses = await OtherExpense.find(query).sort({ date: 1 });
+
+    if (otherExpenses.length === 0) {
+      return res.status(404).json({
+        message:
+          "No other expenses found for this truck in the given date range",
+      });
+    }
+
+    const totalExpense = otherExpenses.reduce(
+      (sum, expense) => sum + expense.cost,
+      0
+    );
+
+    const formattedOtherExpenses = otherExpenses.map((expense, index) => {
+
+      const date = new Date(expense.date);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
+      return {
+        ...expense.toObject(), // Convert Mongoose document to plain object
+        date: formattedDate,
+        category:
+          expense.category === "other"
+            ? expense.other
+            : otherNameConversions[expense.category] || "Other",
+
+        key: index,
+      };
+    });
+    res.status(200).json({
+      expenses: formattedOtherExpenses,
+      totalExpense,
+    });
+  } catch (error) {
+    console.error("Error retrieving other expenses:", error);
+    res.status(500).json({ message: "Failed to retrieve other expenses" });
+  }
+};
+
 const deleteOtherExpenseById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -228,4 +302,5 @@ module.exports = {
   getAllOtherExpensesByTruckId,
   deleteOtherExpenseById,
   downloadOtherExpensesExcel,
+  getAllOtherExpensesByUserId,
 };

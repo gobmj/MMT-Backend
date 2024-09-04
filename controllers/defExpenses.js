@@ -105,6 +105,78 @@ const getAllDefExpensesByTruckId = async (req, res) => {
   }
 };
 
+const getAllDefExpensesByUserId = async(req,res)=>{
+  try {
+    const { userId, selectedDates } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    // Build the query filter
+    const query = { addedBy: userId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    // Fetch all fuel expenses for the given truckId and date range
+    const defExpenses = await DefExpense.find(query).sort({ date: 1 });
+
+    if (defExpenses.length === 0) {
+      return res.status(404).json({
+        message: "No def expenses found for this user in the given date range",
+      });
+    }
+
+    const totalExpense = defExpenses.reduce(
+      (sum, expense) => sum + expense.cost,
+      0
+    );
+
+    const formattedDefExpenses = defExpenses.map((expense, index) => {
+      // Format the date to 'YYYY-MM-DD'
+      // const date = new Date(expense.date);
+      // const formattedDate = date.toISOString().split("T")[0];
+
+      const date = new Date(expense.date);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
+      return {
+        ...expense.toObject(), // Convert Mongoose document to plain object
+        date: formattedDate,
+        key: index,
+      };
+    });
+    res.status(200).json({
+      expenses: formattedDefExpenses,
+      totalExpense,
+    });
+  } catch (error) {
+    console.error("Error retrieving def expenses:", error);
+    res.status(500).json({ message: "Failed to retrieve def expenses" });
+  }
+}
+
 const deleteDefExpenseById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -248,4 +320,5 @@ module.exports = {
   getAllDefExpensesByTruckId,
   deleteDefExpenseById,
   downloadDefExpensesExcel,
+  getAllDefExpensesByUserId
 };

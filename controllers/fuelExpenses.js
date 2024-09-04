@@ -1,7 +1,7 @@
 const { default: mongoose } = require("mongoose");
 const FuelExpense = require("../models/fuelExpense-model");
 const moment = require("moment");
-const ExcelJS = require('exceljs');
+const ExcelJS = require("exceljs");
 const TruckModel = require("../models/truck-model");
 
 // Controller to add a new fuel filling record
@@ -113,6 +113,78 @@ const getAllFuelExpensesByTruckId = async (req, res) => {
   }
 };
 
+const getAllFuelExpensesByUserId = async (req, res) => {
+  try {
+    const { userId, selectedDates } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    // Build the query filter
+    const query = { addedBy: userId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    // Fetch all fuel expenses for the given truckId and date range
+    const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
+
+    if (fuelExpenses.length === 0) {
+      return res.status(404).json({
+        message:
+          "No fuel expenses found for this user in the given date range",
+      });
+    }
+
+    const totalExpense = fuelExpenses.reduce(
+      (sum, expense) => sum + expense.cost,
+      0
+    );
+
+    // Calculate mileage and range, and format the date
+    const formattedFuelExpenses = fuelExpenses.map((expense, index) => {
+
+      const date = new Date(expense.date);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
+      return {
+        ...expense.toObject(),
+        date: formattedDate,
+        key: index,
+      };
+    });
+
+    res.status(200).json({
+      expenses: formattedFuelExpenses,
+      totalExpense,
+    });
+  } catch (error) {
+    console.error("Error retrieving fuel expenses:", error);
+    res.status(500).json({ message: "Failed to retrieve fuel expenses" });
+  }
+};
+
 const deleteFuelExpenseById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -174,13 +246,13 @@ const downloadFuelExpensesExcel = async (req, res) => {
     const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
     const truck = await TruckModel.findById(truckId);
 
-    console.log("truck",truck);
-    
+    console.log("truck", truck);
 
     if (fuelExpenses.length === 0) {
       console.log("No expenses found for the given query");
       return res.status(404).json({
-        message: "No fuel expenses found for this truck in the given date range",
+        message:
+          "No fuel expenses found for this truck in the given date range",
       });
     }
 
@@ -212,23 +284,33 @@ const downloadFuelExpensesExcel = async (req, res) => {
     const worksheet = workbook.addWorksheet("Fuel Expenses");
 
     // Add the merged header row
-    worksheet.mergeCells('A1:G1');
-    worksheet.getCell('A1').value = `${truck.registrationNo} - Fuel Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
-    worksheet.getCell('A1').font = { bold: true };
-    worksheet.getCell('A1').fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '000000' } // Black background
-  };
-  worksheet.getCell('A1').font.color = { argb: 'FFFFFF' }; // White font color
-    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    worksheet.mergeCells("A1:G1");
+    worksheet.getCell(
+      "A1"
+    ).value = `${truck.registrationNo} - Fuel Expenses ( ${selectedDates[0]} - ${selectedDates[1]} )`;
+    worksheet.getCell("A1").font = { bold: true };
+    worksheet.getCell("A1").fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "000000" }, // Black background
+    };
+    worksheet.getCell("A1").font.color = { argb: "FFFFFF" }; // White font color
+    worksheet.getCell("A1").alignment = { horizontal: "center" };
 
     // Add the headings
-    const headings = ["Date", "Current KM", "Litres", "Cost", "Note", "Range", "Mileage"];
+    const headings = [
+      "Date",
+      "Current KM",
+      "Litres",
+      "Cost",
+      "Note",
+      "Range",
+      "Mileage",
+    ];
     worksheet.addRow(headings).font = { bold: true };
 
     // Add the data
-    data.forEach(row => {
+    data.forEach((row) => {
       worksheet.addRow([
         row.Date,
         row["Current KM"],
@@ -236,7 +318,7 @@ const downloadFuelExpensesExcel = async (req, res) => {
         row.Cost,
         row.Note,
         row.Range,
-        row.Mileage
+        row.Mileage,
       ]);
     });
 
@@ -266,4 +348,5 @@ module.exports = {
   getAllFuelExpensesByTruckId,
   deleteFuelExpenseById,
   downloadFuelExpensesExcel,
+  getAllFuelExpensesByUserId,
 };

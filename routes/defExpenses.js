@@ -1,17 +1,12 @@
 const express = require('express');
-const { addDefExpense, getAllDefExpensesByTruckId, deleteDefExpenseById, downloadDefExpensesExcel } = require('../controllers/defExpenses');
+const { addDefExpense, getAllDefExpensesByTruckId,getAllDefExpensesByUserId, deleteDefExpenseById, downloadDefExpensesExcel } = require('../controllers/defExpenses');
 
 const router = express.Router();
 
 router.post('/addDefExpense', addDefExpense);
 router.get('/getAllDefExpensesByTruckId', getAllDefExpensesByTruckId);
+router.get('/getAllDefExpensesByUserId', getAllDefExpensesByUserId);
 router.delete('/deleteDefExpenseById/:id', deleteDefExpenseById);
 router.get('/downloadDefExpensesExcel', downloadDefExpensesExcel);
-
-// router.get('/getAllTrucks', getAllTrucks);
-// router.get('/getTruckById/:id', getTruckById); s
-// router.get('/getAllTrucksByUser/:userId', getAllTruckByUser);
-// router.put('/updateTruckById/:id', updateTruckById);
-// router.delete('/deleteTruckById/:id', deleteTruckById);
 
 module.exports = router;
