@@ -249,7 +249,8 @@ const downloadOtherExpensesExcel = async (req, res) => {
     if (otherExpenses.length === 0) {
       console.log("No expenses found for the given query");
       return res.status(404).json({
-        message: "No other expenses found for this truck in the given date range",
+        message:
+          "No other expenses found for this truck in the given date range",
       });
     }
 
@@ -260,7 +261,10 @@ const downloadOtherExpensesExcel = async (req, res) => {
 
       return {
         Date: formattedDate,
-        Category: expense.category === "other" ? expense.other : expense.category,
+        Category:
+          expense.category === "other"
+            ? expense.other
+            : otherNameConversions[expense.category] || "Other",
         Cost: expense.cost,
         Note: expense.note || "",
       };
@@ -317,7 +321,6 @@ const downloadOtherExpensesExcel = async (req, res) => {
       .json({ message: "Failed to generate Excel file", error: error.message });
   }
 };
-
 
 module.exports = {
   addOtherExpense,
