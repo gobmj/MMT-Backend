@@ -1,7 +1,8 @@
 const { default: mongoose } = require("mongoose");
 const OtherExpense = require("../models/otherExpense-model"); // Adjust the path as needed
 const moment = require("moment");
-const XLSX = require("xlsx");
+const ExcelJS = require('exceljs');
+const TruckModel = require("../models/truck-model");
 
 const otherNameConversions = {
   toll: "Toll",
