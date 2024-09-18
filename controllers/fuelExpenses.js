@@ -9,8 +9,6 @@ const addFuelExpense = async (req, res) => {
   try {
     const { truckId, addedBy, date, currentKM, litres, cost, note } = req.body;
 
-    console.log(date);
-
     const newFuelExpense = new FuelExpense({
       truckId,
       addedBy,
