@@ -264,8 +264,6 @@ const downloadDefExpensesExcel = async (req, res) => {
       };
     });
 
-    console.log("Data for Excel:", data);
-
     // Create a new workbook and worksheet
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("DEF Expenses");
@@ -379,8 +377,6 @@ const downloadAllDefExpensesExcel = async (req, res) => {
         };
       })
     );
-
-    console.log("Data for Excel:", data);
 
     // Create a new workbook and worksheet
     const workbook = new ExcelJS.Workbook();

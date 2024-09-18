@@ -55,9 +55,6 @@ const getAllTruckByUser = async (req, res) => {
     try {
         const { addedBy } = req.params;
 
-        console.log(addedBy);
-        
-
         const trucks = await Truck.find({ addedBy });
 
         if (trucks.length === 0) {

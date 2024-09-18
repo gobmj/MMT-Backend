@@ -1,22 +1,23 @@
 const jwt = require('jsonwebtoken');
+const ErrorHandler = require('./errorHandlers');
 
 module.exports = async (req, res, next) => {
 
-    const beare = req.headers.authorization
-    if(!beare){
-        return next(new ErrorHandler("Beare header not valid", 402));
+    const bearer = req.headers.authorization;
+    if (!bearer) {
+        return next(new ErrorHandler("Authorization header not provided", 401));
     }
 
-    const token = beare.split(' ')[1]
-    if (!token){
-        return next(new ErrorHandler("Token not found", 402));
+    const token = bearer.split(' ')[1];
+    if (!token) {
+        return next(new ErrorHandler("Token not found", 401));
     }
 
-    const decodedToken = jwt.verify(token, process.env.SECRETKEY)
-
-    if(!decodedToken){
-        return next(new ErrorHandler("Token not valid", 402));
+    try {
+        const decodedToken = jwt.verify(token, process.env.SECRETKEY);
+        req.username = decodedToken.username;
+        next();
+    } catch (error) {
+        return next(new ErrorHandler("Token not valid", 401));
     }
-    req.username = decodedToken.username
-    next()
-}
+};

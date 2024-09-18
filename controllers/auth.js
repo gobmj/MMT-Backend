@@ -65,7 +65,7 @@ module.exports.signUpWithGoogle = async (req, res) => {
 };
 
 module.exports.whoami = catchAsyncError(async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // Retrieve token from Authorization header
+  const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
     return next(new ErrorHandler("Token not found", 400));
