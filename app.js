@@ -22,6 +22,7 @@ const fuelExpensesRoutes = require("./routes/fuelExpenses");
 const defExpensesRoutes = require("./routes/defExpenses");
 const otherExpensesRoutes = require("./routes/otherExpenses");
 const totalExpensesRoutes = require("./routes/totalExpenses");
+const calculateLoanRoutes = require("./routes/calculateLoan");
 const metadata = require("./routes/metadata");
 
 // express app
@@ -52,6 +53,7 @@ app.use("/api/v1/app/fuelExpenses", isAuthenticated, fuelExpensesRoutes);
 app.use("/api/v1/app/defExpenses", isAuthenticated, defExpensesRoutes);
 app.use("/api/v1/app/otherExpenses", isAuthenticated, otherExpensesRoutes);
 app.use("/api/v1/app/totalExpenses", isAuthenticated, totalExpensesRoutes);
+app.use("/api/v1/app/calculateLoan", calculateLoanRoutes);
 app.use("/api/v1/app/metadata", isAuthenticated, metadata);
 
 // error handler
