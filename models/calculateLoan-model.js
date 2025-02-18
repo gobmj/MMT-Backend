@@ -24,7 +24,7 @@ const LoanCalculationSchema = new mongoose.Schema({
         default: () => new Date(), // Use a function to get the current date and time
       },
     additionalCharges: {
-        type: String,
+        type: Number,
     },
     note: {
         type: String,

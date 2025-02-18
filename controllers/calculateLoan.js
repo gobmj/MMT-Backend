@@ -62,12 +62,12 @@ const getAllLoanCalculationsByTruckId = async (req, res) => {
       date: 1,
     });
 
-    if (loanCalculations.length === 0) {
-      return res.status(404).json({
-        message:
-          "No loan calculations found for this truck in the given date range",
-      });
-    }
+    // if (loanCalculations.length === 0) {
+    //   return res.status(404).json({
+    //     message:
+    //       "No loan calculations found for this truck in the given date range",
+    //   });
+    // }
 
     const totalCalculation = loanCalculations.reduce(
       (sum, calculation) => sum + calculation.cost,
@@ -79,9 +79,9 @@ const getAllLoanCalculationsByTruckId = async (req, res) => {
     const totalFinanceAmount = truck ? truck.financeAmount : 0;
 
     // Fetch recent payment
-    const recentPayment = await LoanCalculation.findOne({ truckId })
-      .sort({ date: -1 }) // Get the latest payment
-      
+    const recentPayment = await LoanCalculation.findOne({ truckId }).sort({
+      createdAt: -1,
+    }); // Get the latest payment
 
     // Calculate payment left
     const totalPaid = await LoanCalculation.aggregate([
@@ -90,7 +90,27 @@ const getAllLoanCalculationsByTruckId = async (req, res) => {
     ]);
 
     const totalPaidAmount = totalPaid.length > 0 ? totalPaid[0].totalPaid : 0;
-    const paymentLeft = totalFinanceAmount - totalPaidAmount;
+
+    // Calculate total additional charges
+    const additionalChargesResult = await LoanCalculation.aggregate([
+      { $match: { truckId } },
+      {
+        $group: {
+          _id: null,
+          totalAdditionalCharges: { $sum: "$additionalCharges" },
+        },
+      },
+    ]);
+
+    const totalAdditionalCharges =
+      additionalChargesResult.length > 0
+        ? additionalChargesResult[0].totalAdditionalCharges
+        : 0;
+
+    const paymentLeft = (totalFinanceAmount + totalAdditionalCharges) - totalPaidAmount;
+
+    console.log(totalFinanceAmount, totalAdditionalCharges, totalPaidAmount, paymentLeft);
+    
 
     // Format loan calculations
     const formattedLoanCalculations = loanCalculations.map(
@@ -112,6 +132,7 @@ const getAllLoanCalculationsByTruckId = async (req, res) => {
       totalFinanceAmount,
       recentPayment,
       paymentLeft,
+      totalAdditionalCharges,
     });
   } catch (error) {
     console.error("Error retrieving loan calculations:", error);
@@ -282,6 +303,7 @@ const downloadLoanCalculationsExcel = async (req, res) => {
       return {
         Date: formattedDate,
         Cost: calculation.cost,
+        AdditionalCharges: calculation.additionalCharges || 0,
         Note: calculation.note || "",
       };
     });
@@ -291,7 +313,7 @@ const downloadLoanCalculationsExcel = async (req, res) => {
     const worksheet = workbook.addWorksheet("Loan Calculations");
 
     // Add the merged header row
-    worksheet.mergeCells("A1:G1");
+    worksheet.mergeCells("A1:D1");
     worksheet.getCell(
       "A1"
     ).value = `${truck.registrationNo} - Loan Calculations ( ${selectedDates[0]} - ${selectedDates[1]} )`;
@@ -305,12 +327,12 @@ const downloadLoanCalculationsExcel = async (req, res) => {
     worksheet.getCell("A1").alignment = { horizontal: "center" };
 
     // Add the headings
-    const headings = ["Date", "Cost", "Note"];
+    const headings = ["Date", "Cost","Additional Charges", "Note"];
     worksheet.addRow(headings).font = { bold: true };
 
     // Add the data
     data.forEach((row) => {
-      worksheet.addRow([row.Date, row.Cost, row.Note]);
+      worksheet.addRow([row.Date, row.Cost, row.AdditionalCharges, row.Note]);
     });
 
     // Write the workbook to a buffer
