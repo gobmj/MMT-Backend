@@ -15,6 +15,13 @@ const TruckSchema = new mongoose.Schema({
         type: Date,
         default: () => new Date(), // Use a function to get the current date and time
       },
+    isFinanced: {
+        type: Boolean,
+        default: false,
+    }, 
+    financeAmount:{
+        type: Number,
+    },
     make: {
         type: String,
     },

@@ -4,9 +4,9 @@ const { addLoanCalculation, getAllLoanCalculationsByTruckId,getAllLoanCalculatio
 const router = express.Router();
 
 router.post('/addLoanCalculation', addLoanCalculation);
-router.get('/getAllLoanCalculationByTruckId', getAllLoanCalculationsByTruckId);
-router.get('/getAllLoanCalculationByUserId', getAllLoanCalculationsByUserId);
-router.delete('/deleteCalculateLoanById/:id', deleteLoanCalculationById);
+router.get('/getAllLoanCalculationsByTruckId', getAllLoanCalculationsByTruckId);
+router.get('/getAllLoanCalculationsByUserId', getAllLoanCalculationsByUserId);
+router.delete('/deleteLoanCalculationById/:id', deleteLoanCalculationById);
 router.get('/downloadLoanCalculationExcel', downloadLoanCalculationsExcel);
 router.get('/downloadAllLoanCalculationExcel', downloadAllLoanCalculationsExcel);
 

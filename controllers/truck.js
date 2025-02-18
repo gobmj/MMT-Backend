@@ -6,7 +6,7 @@ const OtherExpense = require('../models/otherExpense-model');
 
 const addTruck = async (req, res) => {
     try {
-        const { addedBy, registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body;
+        const { addedBy, registrationNo, make, model, isFinanced, financeAmount, year, imgURL, chassisNo, engineNo, desc } = req.body;
 
         const newTruck = new Truck({
             addedBy,
@@ -14,6 +14,8 @@ const addTruck = async (req, res) => {
             make,
             model,
             year,
+            isFinanced,
+            financeAmount,
             imgURL,
             chassisNo,
             engineNo,
@@ -71,8 +73,8 @@ const getAllTruckByUser = async (req, res) => {
 const updateTruckById = async (req, res) => {
     try {
         const { id } = req.params;
-        const { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc } = req.body.values;
-
+        const { registrationNo, make, model, year, imgURL, isFinanced, financeAmount, chassisNo, engineNo, desc } = req.body.values;
+        
         // Validate the ID
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid truck ID' });
@@ -81,7 +83,7 @@ const updateTruckById = async (req, res) => {
         // Update the truck with the provided fields
         const updatedTruck = await Truck.findByIdAndUpdate(
             {_id:id},
-            { registrationNo, make, model, year, imgURL, chassisNo, engineNo, desc },
+            { registrationNo, make, model, year, isFinanced, financeAmount, imgURL, chassisNo, engineNo, desc },
             { new: true }
         );
 

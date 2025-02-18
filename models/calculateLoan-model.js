@@ -13,7 +13,11 @@ const LoanCalculationSchema = new mongoose.Schema({
       },
     date: {
         type: Date,
-        required: [true, "Date of fuel filling is required"],
+        required: [true, "Date of payment is required"],
+    },
+    cost: {
+        type: Number,
+        required: [true, "cost is required"],
     },
     createdAt: {
         type: Date,
