@@ -187,12 +187,147 @@ const getAllFuelExpensesByUserId = async (req, res) => {
   }
 };
 
+const getAllFuelByTruckHelper = async (truckId) => {
+  try {
+
+    // Ensure the dates are in UTC and set the time to 00:00:00 to avoid time zone issues
+    const startDate = selectedDates
+      ? moment.utc(selectedDates[0]).startOf("day").toDate()
+      : null;
+    const endDate = selectedDates
+      ? moment.utc(selectedDates[1]).endOf("day").toDate()
+      : null;
+
+    // Build the query filter
+    const query = { truckId };
+
+    if (startDate && endDate) {
+      if (startDate.toDateString() === endDate.toDateString()) {
+        // If startDate and endDate are the same, match that specific date
+        query.date = {
+          $eq: startDate,
+        };
+      } else {
+        // Match the range between startDate and endDate
+        query.date = { $gte: startDate, $lte: endDate };
+      }
+    }
+
+    // Fetch all fuel expenses for the given truckId and date range
+    const fuelExpenses = await FuelExpense.find(query).sort({ date: 1 });
+
+    if (fuelExpenses.length === 0) {
+      return []
+    }
+
+    const totalExpense = fuelExpenses.reduce(
+      (sum, expense) => sum + expense.cost,
+      0
+    );
+
+    // Calculate mileage and range, and format the date
+    const formattedFuelExpenses = fuelExpenses.map((expense, index) => {
+      // Format the date to 'YYYY-MM-DD'
+      // const date = new Date(expense.date);
+      // const formattedDate = date.toISOString().split("T")[0];
+
+      const date = new Date(expense.date);
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-based
+      const year = date.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+
+      const range =
+        index > 0 ? expense.currentKM - fuelExpenses[index - 1].currentKM : 0;
+
+      // Calculate range - Assuming range is not given and not calculated here
+      // If you have a formula for range, apply it here. For now, I set it as the mileage.
+      const mileage = range > 0 ? (range / expense.litres).toFixed(2) : 0; // Adjust this if you have a specific formula for range
+
+      return {
+        ...expense.toObject(),
+        date: formattedDate,
+        mileage,
+        range,
+        key: index,
+      };
+    });
+
+    return({
+      expenses: formattedFuelExpenses,
+      totalExpense,
+    })
+  } catch (error) {
+    console.error("Error retrieving fuel expenses:", error);
+    return []
+  }
+}
+
+const updateFuelExpenseByTruckId = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      truckId,
+      addedBy,
+      date,
+      currentKM,
+      litres,
+      cost,
+      note,
+    } = req.body;
+    const file = req.file;
+
+    // Validate the fuel ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid fuel expense ID" });
+    }
+    
+
+    // Update the invoice URL if a new file is provided
+    let invoiceURL = req.body.invoiceURL;
+    if (file) {
+      invoiceURL = await uploadInvoice(file);
+    }
+
+    // Update the fuel
+    const updatedFuel = await FuelExpense.findByIdAndUpdate(
+      { _id: id },
+      {
+        truckId,
+        addedBy,
+        date,
+        currentKM,
+        litres,
+        cost,
+        note,
+      },
+      { new: true } // Return the updated document
+    );
+
+    if (!updatedFuel) {
+      return res.status(404).json({ message: "Fuel expense not found" });
+    }
+
+    // Fetch all fuelExpenses for the user after the update
+    // const fuelExpenses = await getAllFuelByTruckHelper(addedBy);
+
+    // Send the response with all fuelExpenses (including the updated one)
+    res.status(200).json({
+      message: "Fuel expense updated successfully",
+      fuelExpense:updatedFuel,
+    });
+  } catch (error) {
+    console.error("Error updating fuel expense:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to update fuel expense", error: error.message });
+  }
+};
+
 
 const deleteFuelExpenseById = async (req, res) => {
   try {
     const { id } = req.params;
-
-    console.log(id);
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid Expense ID" });
@@ -462,6 +597,7 @@ const downloadAllFuelExpensesExcel = async (req, res) => {
 module.exports = {
   addFuelExpense,
   getAllFuelExpensesByTruckId,
+  updateFuelExpenseByTruckId,
   deleteFuelExpenseById,
   downloadFuelExpensesExcel,
   getAllFuelExpensesByUserId,

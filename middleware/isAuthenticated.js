@@ -4,6 +4,7 @@ const ErrorHandler = require('./errorHandlers');
 module.exports = async (req, res, next) => {
 
     const bearer = req.headers.authorization;
+    
     if (!bearer) {
         return next(new ErrorHandler("Authorization header not provided", 401));
     }
